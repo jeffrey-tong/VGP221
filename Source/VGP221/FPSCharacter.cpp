@@ -93,6 +93,14 @@ void AFPSCharacter::EndJump()
 
 void AFPSCharacter::Fire()
 {
+	AVGP221GameModeBase* GameMode = Cast<AVGP221GameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode) {
+		Health -= 10;
+		float healthPercent = Health / MaxHealth;
+
+		GameMode->CurrentWidget->SetHealthBar(healthPercent);
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("Pressing Fire From Character"));
 
 	if (!ProjectileClass) return;
