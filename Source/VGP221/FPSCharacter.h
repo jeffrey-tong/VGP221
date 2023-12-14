@@ -6,9 +6,12 @@
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "FPSProjectile.h"
 #include "Kismet/GameplayStatics.h"
+#include "Animation/AnimInstance.h"
 #include "VGP221GameModeBase.h"
+#include "FPSProjectile.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "InteractionMachine.h"
 #include "FPSCharacter.generated.h"
 
 UCLASS()
@@ -43,6 +46,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<class AFPSProjectile> ProjectileClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	USoundBase* FireSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	UAnimMontage* FireAnimation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+	float SprintSpeedMultiplier;
+
 	UFUNCTION()
 	void MoveForward(float value);
 	UFUNCTION()
@@ -58,7 +70,17 @@ public:
 
 	UFUNCTION()
 	void Sprint();
+	UFUNCTION()
+	void EndSprint();
+
+	UFUNCTION()
+	void Interact();
+	
+	FHitResult InteractHitResult;
 
 	float Health = 100;
 	const float MaxHealth = 100;
+
+	UFUNCTION()
+	void DealDamage(float DamageAmount);
 };

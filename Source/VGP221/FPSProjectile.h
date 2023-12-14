@@ -28,6 +28,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float BulletSpeed = 1000;
 
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	float DamageValue = 20.0f;
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
 	USphereComponent* CollisionComponent;
 

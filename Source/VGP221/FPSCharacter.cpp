@@ -1,17 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "FPSCharacter.h"
 
 // Sets default values
 AFPSCharacter::AFPSCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// FPS Camera
-	// Instantiate in constructors 
-	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FPSCamera"));
+	// Instantiate in constructors
+	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	check(FPSCameraComponent != nullptr);
 
 	FPSCameraComponent->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
@@ -19,7 +18,7 @@ AFPSCharacter::AFPSCharacter()
 	FPSCameraComponent->bUsePawnControlRotation = true;
 
 	// Mesh
-	FPSMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FPSMesh"));
+	FPSMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
 	check(FPSMesh != nullptr);
 
 	FPSMesh->SetupAttachment(FPSCameraComponent);
@@ -28,6 +27,12 @@ AFPSCharacter::AFPSCharacter()
 
 	GetMesh()->SetOwnerNoSee(true);
 
+	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
+	if (CharacterMovementComponent) {
+		CharacterMovementComponent->MaxWalkSpeed = 600.0f;
+		SprintSpeedMultiplier = 1.5f;
+	}
+	
 }
 
 // Called when the game starts or when spawned
@@ -35,38 +40,44 @@ void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-
 	check(GEngine != nullptr)
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Spawning BP_FPSCharacter")));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Spawning BP_FPSCharacter")));
+
 	UE_LOG(LogTemp, Warning, TEXT("Spawning BP_FPSCharacter"));
-	
 }
 
 // Called every frame
 void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
-	//Movement
+
+	// Movement
 	PlayerInputComponent->BindAxis("MoveForward", this, &AFPSCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AFPSCharacter::MoveRight);
-	//Look
+
+	// Look
 	PlayerInputComponent->BindAxis("LookHorizontal", this, &AFPSCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookVertical", this, &AFPSCharacter::AddControllerPitchInput);
-	//Jump
+
+	// Jump
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AFPSCharacter::StartJump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AFPSCharacter::EndJump);
-	//Fire
+
+	// Fire
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AFPSCharacter::Fire);
+
 	//Sprint
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AFPSCharacter::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AFPSCharacter::EndSprint);
+
+	//Interact
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AFPSCharacter::Interact);
 }
 
 void AFPSCharacter::MoveForward(float value)
@@ -93,18 +104,43 @@ void AFPSCharacter::EndJump()
 
 void AFPSCharacter::Fire()
 {
-	AVGP221GameModeBase* GameMode = Cast<AVGP221GameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (GameMode) {
-		Health -= 10;
-		float healthPercent = Health / MaxHealth;
+	// MyAIController.h
+#pragma once
 
-		GameMode->CurrentWidget->SetHealthBar(healthPercent);
-	}
+#include "CoreMinimal.h"
+#include "AIController.h"
+#include "MyAIController.generated.h"
 
-	UE_LOG(LogTemp, Warning, TEXT("Pressing Fire From Character"));
+	UCLASS()
+		class YOURPROJECT_API AMyAIController : public AAIController
+	{
+		GENERATED_BODY()
+
+	public:
+		AMyAIController();
+
+		// Add any additional functions or properties as needed.
+	}; // MyAIController.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "AIController.h"
+#include "MyAIController.generated.h"
+
+	UCLASS()
+		class YOURPROJECT_API AMyAIController : public AAIController
+	{
+		GENERATED_BODY()
+
+	public:
+		AMyAIController();
+
+		// Add any additional functions or properties as needed.
+	}; UE_LOG(LogTemp, Warning, TEXT("Pressing Fire From Character"));
 
 	if (!ProjectileClass) return;
 
+	// Precaculations of loc and rot
 	FVector CameraLocation;
 	FRotator CameraRotation;
 	GetActorEyesViewPoint(CameraLocation, CameraRotation);
@@ -115,6 +151,7 @@ void AFPSCharacter::Fire()
 	FRotator MuzzleRotation = CameraRotation;
 	MuzzleRotation.Pitch += 10.0f;
 
+	// Get World to spawn actor
 	UWorld* World = GetWorld();
 	if (!World) return;
 
@@ -122,16 +159,64 @@ void AFPSCharacter::Fire()
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = GetInstigator();
 
+	// Similar to unity Instantiate. Spawn Actor from class
 	AFPSProjectile* Projectile = World->SpawnActor<AFPSProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
-	if (!Projectile) return;
 
+	// Shoot projectile in direction
+	if (!Projectile) return;
 	FVector LaunchDirection = MuzzleRotation.Vector();
 	Projectile->FireInDirection(LaunchDirection);
 }
 
 void AFPSCharacter::Sprint()
 {
-	
+	GetCharacterMovement()->MaxWalkSpeed *= SprintSpeedMultiplier;
 }
 
+void AFPSCharacter::EndSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed /= SprintSpeedMultiplier;
+}
 
+void AFPSCharacter::Interact()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Pressing Interact"));
+	
+	// Precaculations of loc and rot
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	GetActorEyesViewPoint(CameraLocation, CameraRotation);
+
+	FVector Start = CameraLocation;
+	FVector ForwardVector = CameraRotation.Vector();
+
+	FVector End = Start + (ForwardVector * 1000.0f);
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+
+	//draw raycast
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
+	bool IsHit = GetWorld()->LineTraceSingleByChannel(InteractHitResult, Start, End, ECC_GameTraceChannel2, CollisionParams);
+
+	if (IsHit) {
+		if (Cast<AInteractionMachine>(InteractHitResult.GetActor())) {
+			UE_LOG(LogTemp, Warning, TEXT("Interact"));
+		}
+	}
+}
+
+void AFPSCharacter::DealDamage(float DamageAmount)
+{
+	// Nice easy way to get game mode from anywhere
+	AVGP221GameModeBase* GameMode = Cast<AVGP221GameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode) {
+		Health -= DamageAmount;
+		float healthPercent = Health / MaxHealth;
+
+		GameMode->CurrentWidget->SetHealthBar(healthPercent);
+
+		if (Health <= 0.0f) {
+			Destroy();
+		}
+	}
+}

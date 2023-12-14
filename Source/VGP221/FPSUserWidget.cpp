@@ -8,7 +8,7 @@ void UFPSUserWidget::NativeConstruct()
 	SetHealthBar(1.0);
 	SetScoreText(1);
 
-	if (ButtonWidgetRef) {
+	/*if (ButtonWidgetRef) {
 		for (int i = 0; i < 4; i++) {
 			UUserWidget* widget = CreateWidget(this, ButtonWidgetRef);
 			ButtonContainer->AddChildToVerticalBox(widget);
@@ -16,7 +16,7 @@ void UFPSUserWidget::NativeConstruct()
 			UButtonWidget* button = Cast<UButtonWidget>(widget);
 			button->SetText(i);
 		}
-	}
+	}*/
 }
 
 void UFPSUserWidget::SetHealthBar(float percentage)

@@ -69,6 +69,7 @@ void AFPSProjectile::FireInDirection(const FVector& ShootDirection)
 	ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
 }
 
+#include "Enemy.h"
 void AFPSProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Collision with only physics objects
@@ -77,5 +78,12 @@ void AFPSProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		OtherComponent->AddImpulseAtLocation(ProjectileMovementComponent->Velocity * 100.0f, Hit.ImpactPoint);
 		Destroy();
 	}
+	//Collision with enemy
+	AEnemy* Enemy = Cast<AEnemy>(OtherActor);
+	if (Enemy) {
+		Enemy->DealDamage(DamageValue);
+		Destroy();
+	}
+
 }
 

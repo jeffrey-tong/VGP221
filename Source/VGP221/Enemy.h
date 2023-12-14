@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "FPSCharacter.h"
 #include "Enemy.generated.h"
 
 UCLASS()
@@ -26,25 +28,44 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* DamageCollisionComponent;
 
+	UPROPERTY(VisibleDefaultsOnly, Category = "Enemy")
+	class UAIPerceptionComponent* AIPerceptionComponent;
 
-	bool PlayerDetected;
-	bool CanAttackPlayer;
+	UPROPERTY(VisibleDefaultsOnly, Category = "Enemy")
+	class UAISenseConfig_Sight* SightConfig;
 
-	UPROPERTY(BlueprintReadWrite)
-	bool CanDoDamage;
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	FRotator EnemyRotation;
 
-	class AEnemy_AICharacter* PlayerRef;
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	FVector BaseLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+	FVector CurrentVelocity;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	float MovementSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Health = 100.0f;
 
 	UPROPERTY(EditAnywhere)
-	class USphereComponent* PlayerCollisionDetection;
-	
-	UPROPERTY(EditAnywhere)
-	class USphereComponent* PlayerAttackCollisionDetection;
-	
-	UPROPERTY(EditAnywhere)
-	class UBoxComponent* DamageCollision;
+	float DamageValue = 5.0f;
 
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit);
+
+	UFUNCTION()
+	void OnSensed(const TArray<AActor*>& UpdatedActors);
+
+	void SetNewRotation(FVector TargetPosition, FVector CurrentPosition);
+
+	bool BackToBaseLocation;
+	FVector NewLocation;
+	float DistanceSquared;
+
+	void DealDamage(float DamageAmount);
 };
