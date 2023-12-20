@@ -29,5 +29,8 @@ public:
 	void SetText(int value);
 
 	UFUNCTION()
-	void OnButtonClick();
+	void OnStartButtonClick();
+
+	UFUNCTION()
+	void OnQuitButtonClick();
 };

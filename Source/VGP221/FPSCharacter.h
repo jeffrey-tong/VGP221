@@ -81,6 +81,31 @@ public:
 	float Health = 100;
 	const float MaxHealth = 100;
 
+	float ProjectileDamageValue = 20.0;
+
+	float Money = 0;
+	
+	UFUNCTION()
+	int GetMoney();
+
+	UFUNCTION()
+	void AddMoney(int num);
+
 	UFUNCTION()
 	void DealDamage(float DamageAmount);
+
+	UFUNCTION()
+	void GiveBuff();
+
+	UFUNCTION()
+	void GiveMoveSpeed();
+
+	UFUNCTION()
+	void GiveSprintSpeed();
+
+	UFUNCTION()
+	void HealPlayer();
+
+	UFUNCTION()
+	void GameOver();
 };

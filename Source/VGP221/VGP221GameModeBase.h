@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "Blueprint/UserWidget.h"
 #include "FPSUserWidget.h"
+#include "MenuUserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "VGP221GameModeBase.generated.h"
 
@@ -29,20 +30,35 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG UI")
 	TSubclassOf<UFPSUserWidget> StartingWidgetClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG UI")
+	TSubclassOf<UMenuUserWidget> MenuWidgetClass;
+
 	UPROPERTY()
 	UFPSUserWidget* CurrentWidget;
 
 	UFUNCTION(BlueprintCallable, Category = "UMG UI")
-	void ChangeMenuWidget(TSubclassOf<UFPSUserWidget> NewWidgetClass);
+	void ChangeMenuWidget(TSubclassOf<UUserWidget> NewWidgetClass);
 
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	TSubclassOf<class AEnemy> EnemyBlueprint;
 
 	UPROPERTY(EditAnywhere, Category = "Spawn")
-		TSubclassOf<class AEnemy> FastEnemyBlueprint;
+	TSubclassOf<class AEnemy> FastEnemyBlueprint;
 
 	UPROPERTY(EditAnywhere, Category = "Spawn")
-		TSubclassOf<class AEnemy> SlowEnemyBlueprint;
+	TSubclassOf<class AEnemy> SlowEnemyBlueprint;
+
+	UFUNCTION()
+	void HideMenu();
+
+	UFUNCTION()
+	void ShowMenu();
+
+	UFUNCTION()
+	void PauseGame();
+
+	UFUNCTION()
+	void StartGame();
 
 	float EnemyTimer;
 };

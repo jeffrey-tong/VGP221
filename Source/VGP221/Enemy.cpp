@@ -2,6 +2,8 @@
 
 
 #include "Enemy.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -19,12 +21,12 @@ AEnemy::AEnemy()
 		AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AI Perception Component"));
 		SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
 
-		SightConfig->SightRadius = 10000.0f;
-		SightConfig->LoseSightRadius = 12000.0f;
+		SightConfig->SightRadius = 5000.0f;
+		SightConfig->LoseSightRadius = 6000.0f;
 		SightConfig->PeripheralVisionAngleDegrees = 180.0f;
 		SightConfig->DetectionByAffiliation.bDetectEnemies = true;
-		SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
-		SightConfig->DetectionByAffiliation.bDetectNeutrals = false;
+		SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+		SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 		SightConfig->SetMaxAge(0.1f);
 		
 		AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
@@ -93,6 +95,7 @@ void AEnemy::OnSensed(const TArray<AActor*>& UpdatedActors)
 
 			CurrentVelocity = dir.GetSafeNormal() * MovementSpeed;
 			SetNewRotation(PlayerCharacter->GetActorLocation(), GetActorLocation());
+			break;
 		}
 		/*else {
 			FVector dir = BaseLocation - GetActorLocation();
@@ -123,6 +126,10 @@ void AEnemy::DealDamage(float DamageAmount)
 {
 	Health -= DamageAmount;
 	if (Health <= 0.0f) {
+		AFPSCharacter* Player = Cast<AFPSCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+		if (Player) {
+			Player->AddMoney(1);
+		}
 		Destroy();
 	}
 }

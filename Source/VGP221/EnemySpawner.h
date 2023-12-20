@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "InteractionMachine.generated.h"
+#include "EnemySpawner.generated.h"
 
 UCLASS()
-class VGP221_API AInteractionMachine : public AActor
+class VGP221_API AEnemySpawner : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AInteractionMachine();
+	AEnemySpawner();
 
 protected:
 	// Called when the game starts or when spawned
@@ -22,7 +22,5 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	void Interact();
 
 };

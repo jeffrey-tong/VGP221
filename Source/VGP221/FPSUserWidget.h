@@ -7,6 +7,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
+#include "Components/Image.h"
 #include "ButtonWidget.h"
 #include "FPSUserWidget.generated.h"
 
@@ -25,10 +26,16 @@ public:
 	UProgressBar* HealthBar;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ScoreText;
+	UTextBlock* MoneyText;
 	
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* ButtonContainer;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* TitleText;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* Background;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UButtonWidget> ButtonWidgetRef;
@@ -37,8 +44,14 @@ public:
 	void SetHealthBar(float percentage);
 
 	UFUNCTION()
-	void SetScoreText(int scoreAmount);
+	void SetMoneyText(int scoreAmount);
+
+	UFUNCTION()
+	void HideMenu();
+	
+	UFUNCTION()
+	void ShowMenu();
 
 private:
-	int score = 0;
+	int money = 0;
 };

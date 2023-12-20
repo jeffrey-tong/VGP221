@@ -1,6 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FPSCharacter.h"
+#include "Enemy.h"
+#include "GameFramework/Actor.h"
+
 
 // Sets default values
 AFPSCharacter::AFPSCharacter()
@@ -104,39 +107,7 @@ void AFPSCharacter::EndJump()
 
 void AFPSCharacter::Fire()
 {
-	// MyAIController.h
-#pragma once
-
-#include "CoreMinimal.h"
-#include "AIController.h"
-#include "MyAIController.generated.h"
-
-	UCLASS()
-		class YOURPROJECT_API AMyAIController : public AAIController
-	{
-		GENERATED_BODY()
-
-	public:
-		AMyAIController();
-
-		// Add any additional functions or properties as needed.
-	}; // MyAIController.h
-#pragma once
-
-#include "CoreMinimal.h"
-#include "AIController.h"
-#include "MyAIController.generated.h"
-
-	UCLASS()
-		class YOURPROJECT_API AMyAIController : public AAIController
-	{
-		GENERATED_BODY()
-
-	public:
-		AMyAIController();
-
-		// Add any additional functions or properties as needed.
-	}; UE_LOG(LogTemp, Warning, TEXT("Pressing Fire From Character"));
+	UE_LOG(LogTemp, Warning, TEXT("Pressing Fire From Character"));
 
 	if (!ProjectileClass) return;
 
@@ -164,6 +135,7 @@ void AFPSCharacter::Fire()
 
 	// Shoot projectile in direction
 	if (!Projectile) return;
+	Projectile->SetDamage(ProjectileDamageValue);
 	FVector LaunchDirection = MuzzleRotation.Vector();
 	Projectile->FireInDirection(LaunchDirection);
 }
@@ -200,8 +172,23 @@ void AFPSCharacter::Interact()
 
 	if (IsHit) {
 		if (Cast<AInteractionMachine>(InteractHitResult.GetActor())) {
-			UE_LOG(LogTemp, Warning, TEXT("Interact"));
+			AInteractionMachine* interactMachine = Cast<AInteractionMachine>(InteractHitResult.GetActor());
+			interactMachine->Interact();
 		}
+	}
+}
+
+int AFPSCharacter::GetMoney()
+{
+	return Money;
+}
+
+void AFPSCharacter::AddMoney(int num)
+{
+	Money += num;
+	AVGP221GameModeBase* GameMode = Cast<AVGP221GameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode) {
+		GameMode->CurrentWidget->SetMoneyText(Money);
 	}
 }
 
@@ -216,7 +203,76 @@ void AFPSCharacter::DealDamage(float DamageAmount)
 		GameMode->CurrentWidget->SetHealthBar(healthPercent);
 
 		if (Health <= 0.0f) {
-			Destroy();
+			GameOver();
+		}
+	}
+}
+
+void AFPSCharacter::GiveBuff()
+{
+	int randomBuff = FMath::RandRange(0, 3);
+	switch (randomBuff) {
+	case 0:
+		UE_LOG(LogTemp, Warning, TEXT("Damage Buff"));
+		ProjectileDamageValue += 5;
+		break;
+	case 1:
+		UE_LOG(LogTemp, Warning, TEXT("MoveSpeed Buff"));
+		GiveMoveSpeed();
+		break;
+	case 2:
+		UE_LOG(LogTemp, Warning, TEXT("Sprint Buff"));
+		GiveSprintSpeed();
+		break;
+	case 3:
+		UE_LOG(LogTemp, Warning, TEXT("Heal Buff"));
+		HealPlayer();
+		break;
+	}
+}
+
+void AFPSCharacter::GiveMoveSpeed()
+{
+	GetCharacterMovement()->MaxWalkSpeed += 100;
+}
+
+void AFPSCharacter::GiveSprintSpeed()
+{
+	SprintSpeedMultiplier += 0.5;
+}
+
+void AFPSCharacter::HealPlayer()
+{
+	// Nice easy way to get game mode from anywhere
+	AVGP221GameModeBase* GameMode = Cast<AVGP221GameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode) {
+		Health += 10;
+		if (Health >= MaxHealth) {
+			Health = MaxHealth;
+		}
+		float healthPercent = Health / MaxHealth;
+
+		GameMode->CurrentWidget->SetHealthBar(healthPercent);
+	}
+}
+
+void AFPSCharacter::GameOver()
+{
+	AVGP221GameModeBase* GameMode = Cast<AVGP221GameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode) {
+		GameMode->ShowMenu();
+		GameMode->PauseGame();
+		Health = 100;
+		ProjectileDamageValue = 20.0;
+		SprintSpeedMultiplier = 1.5f;
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (PlayerController) {
+			PlayerController->bShowMouseCursor = true;
+
+			FInputModeUIOnly InputMode;
+			PlayerController->SetInputMode(InputMode);
 		}
 	}
 }

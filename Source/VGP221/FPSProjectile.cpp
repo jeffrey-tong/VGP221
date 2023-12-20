@@ -87,3 +87,6 @@ void AFPSProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 
 }
 
+void AFPSProjectile::SetDamage(int damageAmount) {
+	DamageValue = damageAmount;
+}

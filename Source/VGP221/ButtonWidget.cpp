@@ -2,17 +2,36 @@
 
 
 #include "ButtonWidget.h"
+#include "FPSUserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "VGP221GameModeBase.h"
 
 void UButtonWidget::SetText(int value)
 {
 	if (!Button || !ButtonText) return;
 
 	num = value;
-	ButtonText->SetText(FText::FromString(FString::FromInt(num)));
-	Button->OnClicked.AddDynamic(this, &UButtonWidget::OnButtonClick);
+	if (num == 0) {
+		ButtonText->SetText(FText::FromString("Start Game"));
+		Button->OnClicked.AddDynamic(this, &UButtonWidget::OnStartButtonClick);
+	}
+	if (num == 1) {
+		ButtonText->SetText(FText::FromString("Quit Game"));
+		Button->OnClicked.AddDynamic(this, &UButtonWidget::OnQuitButtonClick);
+	}
+	
 }
 
-void UButtonWidget::OnButtonClick()
+void UButtonWidget::OnStartButtonClick()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Button Clicked: %d"), num);
+	AVGP221GameModeBase* GameMode = Cast<AVGP221GameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode) {
+		GameMode->HideMenu();
+		GameMode->StartGame();
+	}
+}
+
+void UButtonWidget::OnQuitButtonClick()
+{
+	GetWorld()->GetFirstPlayerController()->ConsoleCommand("quit");
 }
